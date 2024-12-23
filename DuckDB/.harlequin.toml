@@ -1,7 +1,0 @@
-default_profile = "csvdb"
-[profiles.csvdb]
-adapter = "duckdb"
-theme = "harlequin"
-limit = 10000
-keymap_name = ["vscode"]
-conn_str = ["f1.db"]
