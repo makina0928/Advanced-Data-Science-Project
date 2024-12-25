@@ -1,0 +1,2 @@
+1. pip install marimo
+2. marimo edit <notebook_name>.py
