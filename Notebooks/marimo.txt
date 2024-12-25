@@ -1,2 +1,6 @@
-1. pip install marimo
-2. marimo edit <notebook_name>.py
+1. python -m venv marimo_env
+2. marimo_env\Scripts\activate
+3. pip install marimo notebook
+4. marimo edit <notebook_name>.py
+
+Note! To download your notebook as pdf or PNG use ctrl + . windows shortcut
