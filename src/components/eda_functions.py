@@ -1,7 +1,11 @@
+import os
+import sys
+import pandas as pd
+import numpy as np
 # Define numerical & categorical columns
 def print_feature_types(df):
-    numeric_features = [feature for feature in df.columns if df[feature].dtype != 'O']
-    categorical_features = [feature for feature in df.columns if df[feature].dtype == 'O']
+    numeric_features = df.select_dtypes(include=[np.number]).columns.tolist()
+    categorical_features = df.select_dtypes(include=['object']).columns.tolist()
 
     # Print columns
     print(f'We have {len(numeric_features)} numerical features : {numeric_features}')
@@ -39,7 +43,7 @@ def calculate_key_metrics(df, numeric_columns=None, handle_missing='drop'):
     - handle_missing (str): 'drop' to drop missing values, 'fill' to fill them with the column mean, or 'ignore'.
     
     Returns:
-    - pandas.DataFrame: DataFrame containing the calculated key metrics with no index changes.
+    - dict: Dictionary containing the calculated key metrics.
     """
     if numeric_columns is None:
         # Automatically select numeric columns if none are specified
@@ -49,7 +53,7 @@ def calculate_key_metrics(df, numeric_columns=None, handle_missing='drop'):
     if handle_missing == 'drop':
         df = df.dropna(subset=numeric_columns)
     elif handle_missing == 'fill':
-        df[numeric_columns] = df[numeric_columns].fillna(df[numeric_columns].mean())
+        df[numeric_columns] = df[numeric_columns].apply(lambda x: x.fillna(x.mean()))
 
     # Initialize the key metrics dictionary
     key_metrics = {}
@@ -63,11 +67,7 @@ def calculate_key_metrics(df, numeric_columns=None, handle_missing='drop'):
                 f"Std Dev {col}": df[col].std()
             })
 
-    # Convert to a DataFrame and round the values for display
-    key_metrics_df = pd.DataFrame(list(key_metrics.items()), columns=["Metric", "Value"])
-    key_metrics_df["Value"] = key_metrics_df["Value"].round(2)  # Round all values to 2 decimal places
-
-    return key_metrics_df
+    return key_metrics
 
 
 # Calculate Active vs. Churned distribution
@@ -80,28 +80,26 @@ def calculate_status_distribution(df, column_name):
     - column_name (str): The name of the column to analyze (e.g., 'Churn').
     
     Returns:
-    - pandas.DataFrame: DataFrame with counts and percentages for each category.
+    - dict: A dictionary with the counts and percentages for each category.
     """
     # Ensure the column exists in the DataFrame
     if column_name not in df.columns:
         raise ValueError(f"Column '{column_name}' not found in the DataFrame.")
     
     # Total customers
-    total_customers = df.shape[0]
+    total_customers = len(df)
 
     # Count values and calculate percentages
-    value_counts = df[column_name].value_counts()
-    percentages = round((value_counts / total_customers) * 100, 2)
+    value_counts = df[column_name].value_counts().to_dict()
+    percentages = {key: round((value / total_customers) * 100, 2) for key, value in value_counts.items()}
     
-    # Create a DataFrame for the results
-    distribution_data = {
-        f"{column_name}": value_counts.index.tolist(),
-        "Count": value_counts.values.tolist(),
-        "Percentage": percentages.values.tolist()
+    # Prepare the results as a dictionary
+    results = {
+        "Categories": list(value_counts.keys()),
+        "Counts": list(value_counts.values()),
+        "Percentages": list(percentages.values())
     }
     
-    distribution_df = pd.DataFrame(distribution_data)
-    
-    return distribution_df
+    return results
 
 
